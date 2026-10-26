@@ -1,6 +1,5 @@
 plugins {
     alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
     alias(libs.plugins.compose.compiler)
 }
 
@@ -19,7 +18,7 @@ android {
     }
 
     signingConfigs {
-        create("debug") {
+        getByName("debug") {
             val keystoreFile = if (file("debug.keystore").exists()) {
                 file("debug.keystore")
             } else if (file("../debug.keystore").exists()) {
@@ -52,10 +51,6 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
-    }
-
-    kotlinOptions {
-        jvmTarget = "17"
     }
 
     buildFeatures {

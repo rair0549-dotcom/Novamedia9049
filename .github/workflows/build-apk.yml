@@ -121,8 +121,16 @@ jobs:
 
           echo "=== Executing Gradle Build (:app:assembleDebug) ==="
           set +e
-          gradle :app:assembleDebug --stacktrace --info --full-stacktrace --no-daemon 2>&1 | tee gradle_build.log
-          GRADLE_EXIT_CODE=${PIPESTATUS[0]}
+          if [ -f "./gradlew" ]; then
+            echo "Found repository Gradle wrapper; granting execute permissions..."
+            chmod +x ./gradlew
+            ./gradlew :app:assembleDebug --stacktrace --info --full-stacktrace --no-daemon 2>&1 | tee gradle_build.log
+            GRADLE_EXIT_CODE=${PIPESTATUS[0]}
+          else
+            echo "Gradle wrapper not found; using system Gradle 9.3.1..."
+            gradle :app:assembleDebug --stacktrace --info --full-stacktrace --no-daemon 2>&1 | tee gradle_build.log
+            GRADLE_EXIT_CODE=${PIPESTATUS[0]}
+          fi
           set -e
 
           if [ $GRADLE_EXIT_CODE -ne 0 ]; then
@@ -151,13 +159,18 @@ jobs:
           echo "Checking for expected APK at: $EXPECTED_APK"
 
           if [ ! -f "$EXPECTED_APK" ]; then
-            echo "WARNING: Expected APK missing at $EXPECTED_APK. Inspecting app/build/outputs/apk..."
+            echo "Primary path not found; searching for any generated APK in app/build/outputs/apk/..."
             if [ -d "app/build/outputs/apk" ]; then
-              echo "Discovered files inside app/build/outputs/apk:"
-              find app/build/outputs/apk -maxdepth 3 -type f -name "*.apk"
-            else
-              echo "Directory app/build/outputs/apk does not exist."
+              DISCOVERED_APK=$(find app/build/outputs/apk -type f -name "*.apk" | head -n 1)
+              if [ -n "$DISCOVERED_APK" ] && [ -f "$DISCOVERED_APK" ]; then
+                echo "Discovered APK at $DISCOVERED_APK; copying to $EXPECTED_APK"
+                mkdir -p "$(dirname "$EXPECTED_APK")"
+                cp -f "$DISCOVERED_APK" "$EXPECTED_APK"
+              fi
             fi
+          fi
+
+          if [ ! -f "$EXPECTED_APK" ]; then
             echo "ERROR: Expected debug APK $EXPECTED_APK was not found." >&2
             exit 1
           fi

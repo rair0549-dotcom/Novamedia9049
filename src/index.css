@@ -1,0 +1,50 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --nova-bg: #090B10;
+    --nova-bg-secondary: #11151D;
+    --nova-card: #191F2A;
+    --nova-card-hover: #222B3A;
+    --nova-accent: #62B5FF;
+    --nova-accent-secondary: #A78BFA;
+    --nova-text: #F4F7FC;
+    --nova-text-muted: #A5AFBE;
+    --nova-border: #2B3442;
+    --nova-border-subtle: #1E2532;
+    --nova-success: #5DD6A0;
+    --nova-warning: #FFCA78;
+    --nova-error: #FF7379;
+  }
+
+  body {
+    background-color: var(--nova-bg);
+    color: var(--nova-text);
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    user-select: none;
+    -webkit-user-select: none;
+    overflow-x: hidden;
+  }
+}
+
+/* Custom discreet dark scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #090B10;
+}
+::-webkit-scrollbar-thumb {
+  background: #2B3442;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #3B475A;
+}
+
+/* Tabular numerals for timestamps and speeds */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}

@@ -1,0 +1,6 @@
+{
+  "name": "Nova Media",
+  "description": "Original high-performance Android local media player featuring folder browsing, advanced video controls, audio equalizer, customizable shortcuts, and sleep timer.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

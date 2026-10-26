@@ -95,14 +95,54 @@ jobs:
           echo "Temporary debug keystore verified in ~/.android/debug.keystore and ./debug.keystore."
 
       - name: Build debug APK
+        id: build_apk
         run: |
-          echo "Building debug APK with Gradle 9.3.1..."
+          echo "=== Inspecting Workspace & Build Configuration ==="
+          pwd
+          ls -la
+
+          echo "=== Android & Java Environment ==="
+          echo "JAVA_HOME: $JAVA_HOME"
+          echo "ANDROID_HOME: $ANDROID_HOME"
+          echo "ANDROID_SDK_ROOT: $ANDROID_SDK_ROOT"
+
+          if [ ! -f "settings.gradle" ] && [ ! -f "settings.gradle.kts" ] && [ ! -f "build.gradle" ] && [ ! -f "build.gradle.kts" ]; then
+            echo "::warning::No Gradle build configuration files (settings.gradle/kts or build.gradle/kts) detected in repository root."
+          fi
+          if [ ! -d "app" ]; then
+            echo "::warning::Target subproject directory 'app' not found in repository root."
+          fi
+
           if [ -n "$ANDROID_HOME" ] && [ -x "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" ]; then
             yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses >/dev/null 2>&1 || true
           elif command -v sdkmanager >/dev/null 2>&1; then
             yes | sdkmanager --licenses >/dev/null 2>&1 || true
           fi
-          gradle :app:assembleDebug --stacktrace --no-daemon
+
+          echo "=== Executing Gradle Build (:app:assembleDebug) ==="
+          set +e
+          gradle :app:assembleDebug --stacktrace --info --full-stacktrace --no-daemon 2>&1 | tee gradle_build.log
+          GRADLE_EXIT_CODE=${PIPESTATUS[0]}
+          set -e
+
+          if [ $GRADLE_EXIT_CODE -ne 0 ]; then
+            echo "::error::Gradle build failed with exit code $GRADLE_EXIT_CODE"
+            echo "==================== COMPLETE GRADLE ERROR OUTPUT ===================="
+            cat gradle_build.log
+            echo "======================================================================"
+
+            {
+              echo "## Gradle Build Failed (Exit Code $GRADLE_EXIT_CODE)"
+              echo ""
+              echo "The Gradle build task \`:app:assembleDebug\` failed. Complete build output:"
+              echo ""
+              echo "\`\`\`text"
+              cat gradle_build.log
+              echo "\`\`\`"
+            } >> "$GITHUB_STEP_SUMMARY"
+
+            exit $GRADLE_EXIT_CODE
+          fi
 
       - name: Verify APK
         id: verify_apk
@@ -211,6 +251,11 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          if [ "${{ steps.build_apk.outcome }}" != "success" ]; then
+            echo "Build step did not complete successfully (outcome: ${{ steps.build_apk.outcome }}). Halting before APK publishing."
+            exit 0
+          fi
+
           RELEASE_TAG="debug-apk-build-${{ github.run_number }}-${{ github.run_attempt }}"
           ASSET_NAME="${{ steps.prepare_asset.outputs.asset_name }}"
 
@@ -232,7 +277,7 @@ jobs:
               echo ""
               echo "You can download the APK directly to your Android device from the release page."
             } >> "$GITHUB_STEP_SUMMARY"
-          else
+          elif [ "${{ steps.verify_apk.outcome }}" = "success" ]; then
             echo "::warning::GitHub Release publishing failed or was skipped. However, the APK build and Actions artifact upload succeeded."
 
             {

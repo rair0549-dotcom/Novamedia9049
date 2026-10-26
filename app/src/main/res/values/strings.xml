@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">Nova Media</string>
+    <string name="browse_media">Browse Media</string>
+    <string name="videos">Videos</string>
+    <string name="audio">Audio</string>
+    <string name="playlists">Playlists</string>
+    <string name="no_media_found">No local media found on device</string>
+</resources>

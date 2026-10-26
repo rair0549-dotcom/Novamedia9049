@@ -1,0 +1,7 @@
+<resources>
+    <style name="Theme.NovaMedia" parent="android:Theme.Material.NoActionBar">
+        <item name="android:statusBarColor">@color/nova_dark_bg</item>
+        <item name="android:navigationBarColor">@color/nova_dark_bg</item>
+        <item name="android:windowBackground">@color/nova_dark_bg</item>
+    </style>
+</resources>
